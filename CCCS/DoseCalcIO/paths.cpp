@@ -1,14 +1,17 @@
 #include "paths.h"
 #include "./io_helpers.h"
 #include <boost/filesystem.hpp>
+#include "helper_string.h"
 
 Paths* Paths::m_pInstance = NULL;
-void Paths::Initialize() {
+void Paths::Initialize(int argc, const char** argv) {
     // check env vars
+    if (m_pInstance == NULL)
+        m_pInstance = new Paths;
     if (const char* env_d = std::getenv("DOSECALC_DATA")) {
-        m_data_dir = std::string(env_d);
+        m_pInstance->m_data_dir = std::string(env_d);
     } else {
-        m_data_dir = "./data";
+        m_pInstance->m_data_dir = "./data";
     }
     std::string user;
     try {
@@ -16,8 +19,15 @@ void Paths::Initialize() {
     } catch (std::runtime_error) {
         user = "unknown";
     }
-    m_temp_dir = "/tmp/dosecalc/"+user;
-    boost::filesystem::create_directories(m_temp_dir);
+
+    char* temp_dir = nullptr;
+    if (getCmdLineArgumentString(argc, argv, "temp_dir", &temp_dir)) {
+        m_pInstance->m_temp_dir = std::string(temp_dir);
+    } else
+        m_pInstance->m_temp_dir = "/tmp/dosecalc/"+user;
+    
+    if (! boost::filesystem::is_directory(m_pInstance->m_temp_dir))
+        boost::filesystem::create_directories(m_pInstance->m_temp_dir);
 }
 
 Paths* Paths::Instance() {
