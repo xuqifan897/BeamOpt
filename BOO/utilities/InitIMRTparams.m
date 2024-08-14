@@ -134,6 +134,6 @@ for bid = 1:nb
     mask = (dose<median(PTVdose)/3*2)&PTV;
     if(find(mask))
         figure;imshow3D(mask)
-        error('FOV might be too small for the target!!!') %% Comment this line if you believe the calculated beamlets are enough to cover the PTV is large enough
+%         error('FOV mi/ght be too small for the starget!!!') %% Comment this line if you believe the calculated beamlets are enough to cover the PTV is large enough
     end
 end

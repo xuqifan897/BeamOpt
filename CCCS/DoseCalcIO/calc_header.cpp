@@ -84,7 +84,7 @@ int load_omni_header( CONSTANTS *host, bool verbose )
     sprintf(headerfile,"%s/omni-header.txt",Paths::Instance()->temp_dir().c_str());
     FILE *header_in;
     if ( (header_in = fopen(headerfile,"r")) == NULL ) {
-        printf("Cannot open data header file!\n");
+        printf("Cannot open data header file %s!\n", headerfile);
         return -1;
     }
     // skip header comment lines

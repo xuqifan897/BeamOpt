@@ -6,13 +6,12 @@ addpath(genpath('utilities'), '-end');
 addpath(genpath('beamlogs'), '-end');
 
 clear; clc;
-patientName = 'HN02';
-patFolder = fullfile('/data/qifan/FastDoseWorkplace/BOOval', patientName);
+patientName = 'LUNG';
 PrescriptionDose = 20;
-beamlogfile = 'head_beamlog.mat';
+beamlogfile = 'lung_beamlog.mat';
 
 %% prepare for optimization
-optFolder = fullfile(patFolder, 'experiment');
+optFolder = "/data/qifan/projects/FastDoseWorkplace/BOOval/LUNG/prep_bench";
 
 h5file = fullfile(optFolder, 'Dose_Coefficients.h5');
 maskfile = fullfile(optFolder, 'Dose_Coefficients.mask');
@@ -30,7 +29,7 @@ save(fullfile(optFolder, ['StructureInfo', num2str(InfoNum), '.mat']), 'Structur
 %% Remove beams going through cut off CT images
 PTV = StructureInfo(1).Mask;
 BODY = StructureInfo(2).Mask;
-figure; imshow3D([PTV, BODY], []);
+% figure; imshow3D([PTV, BODY], []);
 
 Isos = GetPTV_COM(PTV);
 [zendpos,zendmaskPos,zstartpos, zstartmaskPos] = GetBODYend_dimenless(BODY);

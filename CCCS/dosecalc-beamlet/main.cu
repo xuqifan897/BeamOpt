@@ -126,6 +126,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    Paths::Initialize(argc, (const char**)argv);
+
 	// check and set flags
     /* if (checkCmdLineFlag( argc, (const char**)argv, "terma" )) { */
     /*     TERMA_ONLY = true; */

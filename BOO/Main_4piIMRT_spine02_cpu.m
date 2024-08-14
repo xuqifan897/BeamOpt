@@ -1,3 +1,7 @@
+clearvars -except M
+close all
+clc
+
 restoredefaultpath;
 addpath(genpath('BOO_QL'), '-end');
 addpath(genpath('CERR2016'), '-end');
@@ -5,57 +9,62 @@ addpath(genpath('CERRaddins'), '-end');
 addpath(genpath('utilities'), '-end');
 addpath(genpath('beamlogs'), '-end');
 
-clearvars -except M
-close all
-clc
-
-patientName = 'HN02';
-patFolder = fullfile('/data/qifan/FastDoseWorkplace/BOOval', patientName);
-optFolder = fullfile(patFolder, 'experiment');
-
-% OutputFileName = fullfile(patFolder, [patientName, '.mat']);
-% CERR('CERRSLICEVIEWER');
+patientName = 'LUNG';
+optFolder = '/data/qifan/projects/FastDoseWorkplace/BOOval/LUNG/prep_bench';
+% OutputFileName = fullfile(optFolder,[patientName '.mat']);
+% CERR('CERRSLICEVIEWER')
 % sliceCallBack_QL('OPENNEWPLANC', OutputFileName);
 
-load(fullfile(optFolder, [patientName, '_M.mat']), 'M', 'dose_data', 'masks');
-InfoNum = 0;
-load(fullfile(optFolder, ['StructureInfo', num2str(InfoNum), '.mat']), 'StructureInfo');
+load(fullfile(optFolder,[patientName '_M.mat']),'M','dose_data','masks');
 
-ParamsNum = 0;
-load(fullfile(optFolder, ['params', num2str(ParamsNum), '.mat']), 'params');
+InfoNum = 1;
+load(fullfile(optFolder,['StructureInfo' num2str(InfoNum) '.mat']),'StructureInfo');
 
-DS = 1;
-[A, Weight] = CreateA(M, StructureInfo, DS);
+ParamsNum = 1;
+load(fullfile(optFolder,['params' num2str(ParamsNum) '.mat']),'params');
+
+%% Downsample and prepare matrix
+DS = 1; % DS=1 for no downsampling; DS>1 for downsampling with a factor of DS
+[A,Weights] = CreateA(M, StructureInfo,DS);
 ATrans = A';
+% [~,Weights] = CreateA(M, StructureInfo,DS, false); % Use this when
+% changing weights without deleting the structure (A matrix is the same)
 
-[Dx, Dy] = CreateDxDyFMO(params.BeamletLog0);
-D = [Dx; Dy];
+[Dx,Dy] = CreateDxDyFMO(params.BeamletLog0);
+D = [Dx;Dy];
 
-%% Change parameters if needed
-params.numBeamsWeWant = 20;
-params.stepSize = 1e-04;
-params.beamWeight = 50;
-params.ChangeWeightsTrigger = 1000;
-params.maxIter = 8000;
-params.showTrigger = 500;
+% %% Change parameters if needed
+% params.numBeamsWeWant = 20;
+% params.stepSize = 1e-04;
+% params.beamWeight = 50;
+% params.ChangeWeightsTrigger = 1000;
+% params.maxIter = 8000;
+% params.showTrigger = 500;
 
 %% beam selection
-seed = 2;  % for random number generator
-rng(seed);
-tic;
-
+seed = 2; % Seed for the random number generator.
+rng(seed) % Set random number generator seed so we can reproduce experiments
+tic
 
 % profile on
-[xFista,costsFista,activeBeams,activeNorms,topN] = BOO_IMRT_L2OneHalf_cpu_QL(A,ATrans,D,Weight,params);
+[xFista,costsFista,activeBeams,activeNorms,topN] = BOO_IMRT_L2OneHalf_cpu_QL(A,ATrans,D,Weights,params);
 % profile report
 
-
 timeBeamSelect = toc;
-figure;semilog(costsFista)
+figure;semilogy(costsFista)
 BOOresult = struct('patientName',patientName,...
     'params',params,'StructureInfo',StructureInfo,'xFista',xFista,...
     'activeBeams',activeBeams,'activeNorms',activeNorms,...
     'costsFista',costsFista,'timeBeamSelect',timeBeamSelect);
+
+%% Merge adjacent beams if needed
+%     if length(activeBeams) > params.numBeamsWeWant
+%         [finalBeams,indxs] = mergeNeighboringBeams_QL(params.beamfpangles, activeBeams, params.numBeamsWeWant); % use kmeans to decide which 20 beams to keep
+%     elseif length(activeBeams) < params.numBeamsWeWant
+%         error('Not enough beams selected! ')
+%     else
+%         finalBeams = activeBeams;
+%     end
 
 %% Show selected beams
 finalBeams = activeBeams;

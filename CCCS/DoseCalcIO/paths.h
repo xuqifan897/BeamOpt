@@ -7,6 +7,7 @@
 class Paths {
     public:
         static Paths* Instance();
+        static void Initialize(int argc=0, const char** argv=nullptr);
 
         // Getters
         std::string temp_dir() { return m_temp_dir; }
@@ -27,7 +28,6 @@ class Paths {
     private:
         Paths() {};
         static Paths* m_pInstance;
-        void Initialize();
 };
 
 #endif
